@@ -59,13 +59,17 @@ impl Tracker {
         status.get_unspent(self.index.chain())
     }
 
-    pub(crate) fn sync(&mut self, daemon: &Daemon, exit_flag: &ExitFlag) -> Result<()> {
-        self.index.sync(daemon, exit_flag)?;
-        if !self.ignore_mempool {
+    pub(crate) fn sync(&mut self, daemon: &Daemon, exit_flag: &ExitFlag) -> Result<bool> {
+        let done = self.index.sync(daemon, exit_flag)?;
+        if done && !self.ignore_mempool {
             self.mempool.sync(daemon);
         }
         // TODO: double check tip - and retry on diff
-        Ok(())
+        Ok(done)
+    }
+
+    pub(crate) fn is_index_ready(&self) -> bool {
+        self.index.is_ready()
     }
 
     pub(crate) fn update_scripthash_status(
